@@ -1,39 +1,30 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
-public class SpawnButton : MonoBehaviour
+public class SpawnButton : MonoBehaviour, ISetup<ButtonSpawnConfig>
 {
     [SerializeField] private Button button;
+    [SerializeField] private TMP_Text label;
 
-    private void Reset()
-        => button = GetComponent<Button>();
+    private ButtonSpawnConfig _config;
 
-    private void Awake()
+    public void Setup(ButtonSpawnConfig config)
     {
-        if (!button)
-            button = GetComponent<Button>();
+        _config = config;
+        label.text = config.buttonTitle;
+        button.onClick.AddListener(OnClick);
     }
 
-    private void OnEnable()
+    private void OnClick()
     {
-        if (!button)
-        {
-            Debug.LogError($"{name} <color=grey>({GetType().Name})</color>: {nameof(button)} is null!");
-            enabled = false;
-            return;
-        }
-        button.onClick.AddListener(HandleClick);
+        // Solo un Spawner en escena: lo buscamos y le pasamos la configuración
+        var spawner = FindObjectOfType<CharacterSpawner>();
+        spawner.Setup(_config.spawnConfig);
     }
 
     private void OnDisable()
     {
-        button?.onClick?.RemoveListener(HandleClick);
-    }
-
-    private void HandleClick()
-    {
-        var spawner = FindFirstObjectByType<CharacterSpawner>();
-        spawner.Spawn();
+        button.onClick.RemoveListener(OnClick);
     }
 }
