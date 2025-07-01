@@ -1,4 +1,4 @@
-// CharacterSpawnConfig.cs
+
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Spawner/CharacterSpawnConfig")]

@@ -18,7 +18,7 @@ public class SpawnButton : MonoBehaviour, ISetup<ButtonSpawnConfig>
 
     private void OnClick()
     {
-        // Solo un Spawner en escena: lo buscamos y le pasamos la configuración
+    
         var spawner = FindObjectOfType<CharacterSpawner>();
         spawner.Setup(_config.spawnConfig);
     }
