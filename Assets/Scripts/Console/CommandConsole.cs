@@ -5,10 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Consola de comandos con alias, comandos básicos y UI.
-/// Intercepta los logs de Unity (ILogHandler) y los reenvía además a la propia consola.
-/// </summary>
 public class CommandConsole : MonoBehaviour, ILogHandler
 {
     [Header("UI References")]
@@ -39,8 +35,7 @@ public class CommandConsole : MonoBehaviour, ILogHandler
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1))
-            ToggleConsole();
+        if (Input.GetKeyDown(KeyCode.F1)) ToggleConsole();
 
         if (consoleCanvas.enabled && Input.GetKeyDown(KeyCode.Return))
         {
@@ -54,8 +49,7 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     private void ToggleConsole()
     {
         consoleCanvas.enabled = !consoleCanvas.enabled;
-        if (consoleCanvas.enabled)
-            inputField.ActivateInputField();
+        if (consoleCanvas.enabled) inputField.ActivateInputField();
     }
 
     private void RegisterCommand(ICommand cmd)
@@ -75,14 +69,8 @@ public class CommandConsole : MonoBehaviour, ILogHandler
 
         if (commands.TryGetValue(name, out var cmd))
         {
-            try
-            {
-                cmd.Execute(args, this);
-            }
-            catch (Exception ex)
-            {
-                LogException(ex, this);
-            }
+            try { cmd.Execute(args, this); }
+            catch (Exception ex) { LogException(ex, this); }
         }
         else
         {
@@ -97,7 +85,6 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     }
 
     #region ILogHandler
-
     public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
     {
         defaultLogHandler.LogFormat(logType, context, format, args);
@@ -110,7 +97,6 @@ public class CommandConsole : MonoBehaviour, ILogHandler
         defaultLogHandler.LogException(exception, context);
         Log($"[Exception] {exception.Message}");
     }
-
     #endregion
 
     #region ICommand
@@ -127,8 +113,7 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     {
         public string Name => "help";
         public string[] Aliases => new[] { "h" };
-        public string Description => "Usage: help [command] - List commands or show details.";
-
+        public string Description => "help [command] - List commands or show details.";
         public void Execute(string[] args, CommandConsole console)
         {
             if (args.Length == 0)
@@ -152,16 +137,10 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     {
         public string Name => "aliases";
         public string[] Aliases => new[] { "alias", "as" };
-        public string Description => "Usage: aliases [command] - Show command aliases.";
-
+        public string Description => "aliases [command] - Show command aliases.";
         public void Execute(string[] args, CommandConsole console)
         {
-            if (args.Length == 0)
-            {
-                console.Log("Usage: aliases [command]");
-                return;
-            }
-
+            if (args.Length == 0) { console.Log("Usage: aliases [command]"); return; }
             var cmdName = args[0];
             if (console.commands.TryGetValue(cmdName, out var cmd))
                 console.Log($"{cmd.Name} aliases: {string.Join(", ", cmd.Aliases)}");
@@ -174,40 +153,31 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     {
         public string Name => "playanimation";
         public string[] Aliases => new[] { "pa" };
-        public string Description => "Usage: playanimation [animationName] - Play an animation on all characters.";
+        public string Description => "playanimation [name] - Play animation on all characters.";
 
         private readonly AnimationNamesConfig config;
-
         public PlayAnimationCommand(AnimationNamesConfig cfg) => config = cfg;
 
         public void Execute(string[] args, CommandConsole console)
         {
-            if (args.Length == 0)
-            {
-                console.Log("Usage: playanimation [animationName]");
-                return;
-            }
-
+            if (args.Length == 0) { console.Log("Usage: playanimation [animationName]"); return; }
             var animName = args[0];
             if (!config.animationNames.Contains(animName))
             {
                 console.Log($"Animation '{animName}' not found. Valid names: {string.Join(", ", config.animationNames)}");
                 return;
             }
-
             var characters = UnityEngine.Object.FindObjectsOfType<Character>();
-            int played = 0;
-            int total = characters.Length;
+            int played = 0, total = characters.Length;
             foreach (var character in characters)
             {
                 var animator = character.GetComponentInChildren<Animator>();
                 if (animator != null)
                 {
-                    animator.Play(animName);
+                    animator.Play(animName, 0, 0f);
                     played++;
                 }
             }
-
             console.Log($"Played '{animName}' on {played}/{total} characters.");
         }
     }
@@ -216,8 +186,7 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     {
         public string Name => "printusername";
         public string[] Aliases => new[] { "name" };
-        public string Description => "Logs 'My Nam Jeff'.";
-
+        public string Description => "printusername - Logs 'My Nam Jeff'.";
         public void Execute(string[] args, CommandConsole console) => console.Log("My Nam Jeff");
     }
 
