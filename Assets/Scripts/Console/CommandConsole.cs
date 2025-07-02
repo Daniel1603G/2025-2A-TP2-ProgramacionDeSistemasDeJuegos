@@ -7,13 +7,13 @@ using TMPro;
 
 public class CommandConsole : MonoBehaviour, ILogHandler
 {
-    [Header("UI References")]
+   //UI
     [SerializeField] private Canvas consoleCanvas;
     [SerializeField] private TMP_InputField inputField;
     [SerializeField] private TMP_Text outputText;
     [SerializeField] private Button toggleButton;
 
-    [Header("Animation Config")]
+    
     [SerializeField] private AnimationNamesConfig animationNamesConfig;
 
     private readonly Dictionary<string, ICommand> commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase);
@@ -167,11 +167,16 @@ public class CommandConsole : MonoBehaviour, ILogHandler
                 console.Log($"Animation '{animName}' not found. Valid names: {string.Join(", ", config.animationNames)}");
                 return;
             }
+
             var characters = UnityEngine.Object.FindObjectsOfType<Character>();
             int played = 0, total = characters.Length;
             foreach (var character in characters)
             {
-                var animator = character.GetComponentInChildren<Animator>();
+                
+                var characterAnimator = character.GetComponent<CharacterAnimator>();
+                if (characterAnimator != null)
+                    characterAnimator.enabled = false;
+                var animator = character.GetComponent<Animator>();
                 if (animator != null)
                 {
                     animator.Play(animName, 0, 0f);
@@ -181,13 +186,14 @@ public class CommandConsole : MonoBehaviour, ILogHandler
             console.Log($"Played '{animName}' on {played}/{total} characters.");
         }
     }
+    
 
     private class PrintUserNameCommand : ICommand
     {
         public string Name => "printusername";
         public string[] Aliases => new[] { "name" };
-        public string Description => "printusername - Logs 'My Nam Jeff'.";
-        public void Execute(string[] args, CommandConsole console) => console.Log("My Nam Jeff");
+        public string Description => "printusername - Logs 'My name is Messi the Goat'.";
+        public void Execute(string[] args, CommandConsole console) => console.Log("My name is Messi the Goat");
     }
 
     #endregion

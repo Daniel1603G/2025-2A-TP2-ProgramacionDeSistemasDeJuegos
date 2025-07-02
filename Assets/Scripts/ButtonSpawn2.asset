@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: ButtonSpawn2
   m_EditorClassIdentifier: 
   buttonTitle: Char 2
-  spawnConfig: {fileID: 0}
+  spawnConfig: {fileID: 11400000, guid: 7787236481b4f9a45a613ffff764e47b, type: 2}

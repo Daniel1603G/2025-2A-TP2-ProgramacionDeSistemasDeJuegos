@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MenuSpawner : MonoBehaviour, ISetupSpawner<SpawnMenuConfig>
 {
-    [Header("Button Prefab & Config")]
+   
     [SerializeField] private SpawnButton buttonPrefab;
     [SerializeField] private SpawnMenuConfig menuConfig;  
 

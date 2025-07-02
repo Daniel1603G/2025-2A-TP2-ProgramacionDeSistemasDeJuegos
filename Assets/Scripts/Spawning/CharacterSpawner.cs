@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class CharacterSpawner : MonoBehaviour, ISetupSpawner<CharacterSpawnConfig>
 {
-    [Header("Spawn Settings")]
+   
     [SerializeField] private float spawnSpacingX = 10f;
     private int spawnIndex;
 
