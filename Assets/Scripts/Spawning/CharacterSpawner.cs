@@ -1,38 +1,17 @@
 using UnityEngine;
 
-public class CharacterSpawner : MonoBehaviour, ISetupSpawner<CharacterSpawnConfig>
+public class CharacterSpawner : MonoBehaviour
 {
    
-    [SerializeField] private float spawnSpacingX = 10f;
-    private int spawnIndex;
+    private ICharacterFactory _factory;
 
-    private void OnEnable()
+    private void Awake()
     {
-        spawnIndex = 0;
+        _factory = new CharacterFactory();
     }
 
-    public void Setup(CharacterSpawnConfig config)
+    public void Spawn(CharacterSpawnConfig config)
     {
-        Vector3 spawnOffset = new Vector3(spawnIndex * spawnSpacingX, 0f, 0f);
-        Vector3 spawnPosition = transform.position + spawnOffset;
-        spawnIndex++;
-
-        var instance = Instantiate(
-            config.characterPrefab,
-            spawnPosition,
-            transform.rotation
-        );
-
-        if (!instance.TryGetComponent<ISetup<CharacterModel>>(out var charSetup))
-            charSetup = instance.gameObject.AddComponent<Character>();
-        charSetup.Setup(config.characterModel);
-
-        if (!instance.TryGetComponent<ISetup<IPlayerControllerModel>>(out var ctrlSetup))
-            ctrlSetup = instance.gameObject.AddComponent<PlayerController>();
-        ctrlSetup.Setup(config.controllerModel);
-
-        var animator = instance.GetComponentInChildren<Animator>()
-                       ?? instance.gameObject.AddComponent<Animator>();
-        animator.runtimeAnimatorController = config.animatorController;
+        _factory.CreateCharacter(config, transform.position, transform.rotation);
     }
 }

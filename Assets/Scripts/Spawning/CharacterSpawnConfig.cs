@@ -7,7 +7,7 @@ public class CharacterSpawnConfig : ScriptableObject
     // Asignaciones 
     
     
-    public Character characterPrefab;
+    public Character prefab;
 
    
     public CharacterModel characterModel;

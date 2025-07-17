@@ -20,7 +20,7 @@ public class SpawnButton : MonoBehaviour, ISetup<ButtonSpawnConfig>
     {
     
         var spawner = FindObjectOfType<CharacterSpawner>();
-        spawner.Setup(_config.spawnConfig);
+        spawner.Spawn(_config.spawnConfig);
     }
 
     private void OnDisable()
