@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ea0e4193e987304082c376e2b7b331b, type: 3}
   m_Name: SpawnChar2
   m_EditorClassIdentifier: 
-  characterPrefab: {fileID: 3659010567693264050, guid: b5bfe69065726de4fb7277dbb1fcec73, type: 3}
+  prefab: {fileID: 3659010567693264050, guid: b5bfe69065726de4fb7277dbb1fcec73, type: 3}
   characterModel:
     <Acceleration>k__BackingField: 5
     <Speed>k__BackingField: 2

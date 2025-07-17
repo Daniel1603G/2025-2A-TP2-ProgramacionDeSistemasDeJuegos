@@ -6,17 +6,17 @@ public class CharacterFactory : ICharacterFactory
     public GameObject CreateCharacter(CharacterSpawnConfig config, Vector3 position, Quaternion rotation)
     {
 
-        var go = Object.Instantiate(config.prefab.gameObject, position, rotation);
+        var result= Object.Instantiate(config.prefab.gameObject, position, rotation);
 
-        var character = go.GetComponent<Character>() ?? go.AddComponent<Character>();
+        var character = result.GetComponent<Character>() ?? result.AddComponent<Character>();
         character.Setup(config.characterModel);
 
-        var controller = go.GetComponent<PlayerController>() ?? go.AddComponent<PlayerController>();
+        var controller = result.GetComponent<PlayerController>() ?? result.AddComponent<PlayerController>();
         controller.Setup(config.controllerModel);
 
-        var animator = go.GetComponentInChildren<Animator>() ?? go.AddComponent<Animator>();
+        var animator = result.GetComponentInChildren<Animator>() ?? result.AddComponent<Animator>();
         animator.runtimeAnimatorController = config.animatorController;
 
-        return go;
+        return result;
     }
 }
