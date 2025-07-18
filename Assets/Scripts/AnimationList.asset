@@ -16,3 +16,6 @@ MonoBehaviour:
   - Idle
   - Jump
   - Run
+  - Fall
+  - Appear
+  - Disappear

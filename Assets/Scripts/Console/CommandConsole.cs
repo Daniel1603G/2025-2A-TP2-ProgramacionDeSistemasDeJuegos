@@ -5,14 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
-using System.Linq;
 
 public class CommandConsole : MonoBehaviour, ICommandRegistry
 {
     public static CommandConsole Instance { get; private set; }
-
-    [Header("Input System")]
-
+    
     [Header("UI References")]
     [SerializeField] private GameObject consolePanel;
     [SerializeField] private TMP_InputField inputField;
@@ -69,15 +66,18 @@ public class CommandConsole : MonoBehaviour, ICommandRegistry
             inputField.ActivateInputField();
     }
 
+    private void ClearConsole() => outputText.text = string.Empty;
+
+
     private void OnInputSubmit(string input)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return;
+        if (string.IsNullOrWhiteSpace(input)) return;
 
-        AppendLog($"> {input}");
-        ParseAndExecute(input);
-        inputField.text = string.Empty;
-        inputField.ActivateInputField();
+        ClearConsole();                    
+        AppendLog($"> {input}");          
+        ParseAndExecute(input);            
+        inputField.text = string.Empty;    
+        inputField.ActivateInputField(); 
     }
 
     private void RegisterCommand(IConsoleCommand command)

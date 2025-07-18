@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CharacterSpawnConfig : ScriptableObject
 {
-    // Asignaciones 
+    
     
     
     public Character prefab;

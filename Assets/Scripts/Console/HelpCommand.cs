@@ -1,30 +1,54 @@
 ﻿public class HelpCommand : IConsoleCommand
 {
-    private readonly ICommandRegistry _registry;
-    public HelpCommand(ICommandRegistry registry) => _registry = registry;
+    private ICommandRegistry registry;
 
-    public string Name => "help";
-    public string[] Aliases => new[] { "h", "?" };
-    public string Description => "help [command] - List commands or show details.";
+    public HelpCommand(ICommandRegistry registry)
+    {
+        this.registry = registry;
+    }
+
+    public string Name
+    {
+        get { return "help"; }
+    }
+
+    public string[] Aliases
+    {
+        get { return new string[] { "h", "?" }; }
+    }
+
+    public string Description
+    {
+        get { return "help [command] - List commands or show details."; }
+    }
 
     public void Execute(string[] args)
     {
-        var console = CommandConsole.Instance;
+        CommandConsole console = CommandConsole.Instance;
 
+      
         if (args.Length == 0)
         {
             console.AppendLog("Available commands:");
-        
-            foreach (var command in _registry.Commands)
-                console.AppendLog($"- {command.Name}: {command.Description}");
+            foreach (IConsoleCommand cmd in registry.Commands)
+            {
+                console.AppendLog("- " + cmd.Name + ": " + cmd.Description);
+            }
             return;
         }
 
-        var cmdName = args[0];
-      
-        if (_registry.TryGetCommandInfo(cmdName, out var found))
-            console.AppendLog($"{found.Name}: {found.Description}");
+    
+        string cmdName = args[0];
+        IConsoleCommand found;
+        bool exists = registry.TryGetCommandInfo(cmdName, out found);
+
+        if (exists)
+        {
+            console.AppendLog(found.Name + ": " + found.Description);
+        }
         else
-            console.AppendLog($"No help found for '{cmdName}'.");
+        {
+            console.AppendLog("No help for '" + cmdName + "'.");
+        }
     }
 }

@@ -15,12 +15,12 @@ public class MenuSpawner : MonoBehaviour, ISetupSpawner<SpawnMenuConfig>
 
     public void Setup(SpawnMenuConfig config)
     {
-        foreach (var btnCfg in config.buttonConfigs)
+        foreach (var button  in config.buttonConfigs)
         {
             
-            var btnInstance = Instantiate(buttonPrefab, transform);
+            var buttonIns = Instantiate(buttonPrefab, transform);
           
-            btnInstance.Setup(btnCfg);
+            buttonIns.Setup(button);
         }
     }
 }

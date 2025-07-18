@@ -55,11 +55,6 @@ public class PlayAnimationCommand : IConsoleCommand
                 .animationClips
                 .Select(c => c.name)
                 .ToList();  
-
-
-            console.AppendLog(
-                $"[{character.name}] Clips: {string.Join(", ", clips)}"
-            );
             animator.CrossFade(animName, 0f);
          
             played++;
