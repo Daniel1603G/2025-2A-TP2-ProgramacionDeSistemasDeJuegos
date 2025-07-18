@@ -8,11 +8,11 @@ using TMPro;
 public class CommandConsole : MonoBehaviour, ILogHandler
 {
    //UI
-    [SerializeField] private Canvas consoleCanvas;
+    [SerializeField] private Canvas consolePanel;
     [SerializeField] private TMP_InputField inputField;
     [SerializeField] private TMP_Text outputText;
     [SerializeField] private Button toggleButton;
-
+    public static CommandConsole Instance { get; private set; }
     
     [SerializeField] private AnimationNamesConfig animationNamesConfig;
 
@@ -21,15 +21,17 @@ public class CommandConsole : MonoBehaviour, ILogHandler
 
     private void Awake()
     {
+        if (Instance != null) { Destroy(gameObject); return; }
+     Instance = this;
+    DontDestroyOnLoad(gameObject);
         defaultLogHandler = Debug.unityLogger.logHandler;
         Debug.unityLogger.logHandler = this;
 
         RegisterCommand(new HelpCommand());
         RegisterCommand(new AliasesCommand());
         RegisterCommand(new PlayAnimationCommand(animationNamesConfig));
-        RegisterCommand(new PrintUserNameCommand());
 
-        consoleCanvas.enabled = false;
+        consolePanel.enabled = false;
         toggleButton.onClick.AddListener(ToggleConsole);
     }
 
@@ -37,7 +39,7 @@ public class CommandConsole : MonoBehaviour, ILogHandler
     {
         if (Input.GetKeyDown(KeyCode.F1)) ToggleConsole();
 
-        if (consoleCanvas.enabled && Input.GetKeyDown(KeyCode.Return))
+        if (consolePanel.enabled && Input.GetKeyDown(KeyCode.Return))
         {
             var line = inputField.text;
             inputField.text = string.Empty;
@@ -48,8 +50,8 @@ public class CommandConsole : MonoBehaviour, ILogHandler
 
     private void ToggleConsole()
     {
-        consoleCanvas.enabled = !consoleCanvas.enabled;
-        if (consoleCanvas.enabled) inputField.ActivateInputField();
+        consolePanel.enabled = !consolePanel.enabled;
+        if (consolePanel.enabled) inputField.ActivateInputField();
     }
 
     private void RegisterCommand(ICommand cmd)
