@@ -4,199 +4,118 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.InputSystem;
+using System.Linq;
 
-public class CommandConsole : MonoBehaviour, ILogHandler
+public class CommandConsole : MonoBehaviour, ICommandRegistry
 {
-   //UI
-    [SerializeField] private Canvas consolePanel;
+    public static CommandConsole Instance { get; private set; }
+
+    [Header("Input System")]
+
+    [Header("UI References")]
+    [SerializeField] private GameObject consolePanel;
     [SerializeField] private TMP_InputField inputField;
     [SerializeField] private TMP_Text outputText;
     [SerializeField] private Button toggleButton;
-    public static CommandConsole Instance { get; private set; }
-    
+
+    [Header("Animation Config")]
     [SerializeField] private AnimationNamesConfig animationNamesConfig;
 
-    private readonly Dictionary<string, ICommand> commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase);
-    private ILogHandler defaultLogHandler;
+    private readonly Dictionary<string, IConsoleCommand> commands = new(StringComparer.OrdinalIgnoreCase);
+    
+    public IEnumerable<IConsoleCommand> Commands
+        => commands
+            .Values
+            .GroupBy(c => c.Name)
+            .Select(g => g.First());
 
     private void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
-     Instance = this;
-    DontDestroyOnLoad(gameObject);
-        defaultLogHandler = Debug.unityLogger.logHandler;
-        Debug.unityLogger.logHandler = this;
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
 
-        RegisterCommand(new HelpCommand());
+      
+        RegisterCommand(new HelpCommand(this));
         RegisterCommand(new AliasesCommand());
         RegisterCommand(new PlayAnimationCommand(animationNamesConfig));
 
-        consolePanel.enabled = false;
+    
+        consolePanel.SetActive(false);
         toggleButton.onClick.AddListener(ToggleConsole);
+        inputField.onSubmit.AddListener(OnInputSubmit);
     }
-
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1)) ToggleConsole();
+        if (Input.GetKeyDown(KeyCode.F1))
+            ToggleConsole();
+    }
+   
 
-        if (consolePanel.enabled && Input.GetKeyDown(KeyCode.Return))
-        {
-            var line = inputField.text;
-            inputField.text = string.Empty;
-            inputField.ActivateInputField();
-            ProcessInput(line);
-        }
+    private void OnToggleConsole(InputAction.CallbackContext ctx)
+    {
+        ToggleConsole();
     }
 
     private void ToggleConsole()
     {
-        consolePanel.enabled = !consolePanel.enabled;
-        if (consolePanel.enabled) inputField.ActivateInputField();
+        consolePanel.SetActive(!consolePanel.activeSelf);
+        if (consolePanel.activeSelf)
+            inputField.ActivateInputField();
     }
 
-    private void RegisterCommand(ICommand cmd)
+    private void OnInputSubmit(string input)
     {
-        commands[cmd.Name] = cmd;
-        foreach (var alias in cmd.Aliases)
-            commands[alias] = cmd;
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        AppendLog($"> {input}");
+        ParseAndExecute(input);
+        inputField.text = string.Empty;
+        inputField.ActivateInputField();
     }
 
-    private void ProcessInput(string input)
+    private void RegisterCommand(IConsoleCommand command)
     {
-        if (string.IsNullOrWhiteSpace(input)) return;
+        commands[command.Name] = command;
+        foreach (var alias in command.Aliases)
+            commands[alias] = command;
+    }
 
-        var parts = input.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var name = parts[0];
-        var args = parts.Length > 1 ? parts.Skip(1).ToArray() : Array.Empty<string>();
+    public bool TryGetCommandInfo(string name, out IConsoleCommand command)
+    {
+        return commands.TryGetValue(name, out command);
+    }
+    
+    
 
-        if (commands.TryGetValue(name, out var cmd))
+    private void ParseAndExecute(string input)
+    {
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return;
+
+        var key = parts[0];
+        var args = parts.Skip(1).ToArray();
+        if (commands.TryGetValue(key, out var cmd))
         {
-            try { cmd.Execute(args, this); }
-            catch (Exception ex) { LogException(ex, this); }
+            try { cmd.Execute(args); }
+            catch (Exception ex) { AppendLog($"<color=red>Error:</color> {ex.Message}"); }
         }
         else
         {
-            Log($"Unknown command '{name}'. Type 'help' to list commands.");
+            AppendLog($"<color=yellow>Unknown command:</color> {key}");
         }
     }
 
-    public void Log(string message)
+    public void AppendLog(string message)
     {
         outputText.text += message + "\n";
-        defaultLogHandler.LogFormat(LogType.Log, null, message);
     }
-
-    #region ILogHandler
-    public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
-    {
-        defaultLogHandler.LogFormat(logType, context, format, args);
-        var msg = string.Format(format, args);
-        Log($"[{logType}] {msg}");
-    }
-
-    public void LogException(Exception exception, UnityEngine.Object context)
-    {
-        defaultLogHandler.LogException(exception, context);
-        Log($"[Exception] {exception.Message}");
-    }
-    #endregion
-
-    #region ICommand
-
-    public interface ICommand
-    {
-        string Name { get; }
-        string[] Aliases { get; }
-        string Description { get; }
-        void Execute(string[] args, CommandConsole console);
-    }
-
-    private class HelpCommand : ICommand
-    {
-        public string Name => "help";
-        public string[] Aliases => new[] { "h" };
-        public string Description => "help [command] - List commands or show details.";
-        public void Execute(string[] args, CommandConsole console)
-        {
-            if (args.Length == 0)
-            {
-                console.Log("Available commands:");
-                foreach (var cmd in console.commands.Values.GroupBy(c => c.Name).Select(g => g.First()))
-                    console.Log($"- {cmd.Name}: {cmd.Description}");
-            }
-            else
-            {
-                var cmdName = args[0];
-                if (console.commands.TryGetValue(cmdName, out var cmd))
-                    console.Log($"{cmd.Name}: {cmd.Description}");
-                else
-                    console.Log($"No help found for '{cmdName}'.");
-            }
-        }
-    }
-
-    private class AliasesCommand : ICommand
-    {
-        public string Name => "aliases";
-        public string[] Aliases => new[] { "alias", "as" };
-        public string Description => "aliases [command] - Show command aliases.";
-        public void Execute(string[] args, CommandConsole console)
-        {
-            if (args.Length == 0) { console.Log("Usage: aliases [command]"); return; }
-            var cmdName = args[0];
-            if (console.commands.TryGetValue(cmdName, out var cmd))
-                console.Log($"{cmd.Name} aliases: {string.Join(", ", cmd.Aliases)}");
-            else
-                console.Log($"Command '{cmdName}' not found.");
-        }
-    }
-
-    private class PlayAnimationCommand : ICommand
-    {
-        public string Name => "playanimation";
-        public string[] Aliases => new[] { "pa" };
-        public string Description => "playanimation [name] - Play animation on all characters.";
-
-        private readonly AnimationNamesConfig config;
-        public PlayAnimationCommand(AnimationNamesConfig cfg) => config = cfg;
-
-        public void Execute(string[] args, CommandConsole console)
-        {
-            if (args.Length == 0) { console.Log("Usage: playanimation [animationName]"); return; }
-            var animName = args[0];
-            if (!config.animationNames.Contains(animName))
-            {
-                console.Log($"Animation '{animName}' not found. Valid names: {string.Join(", ", config.animationNames)}");
-                return;
-            }
-
-            var characters = UnityEngine.Object.FindObjectsOfType<Character>();
-            int played = 0, total = characters.Length;
-            foreach (var character in characters)
-            {
-                
-                var characterAnimator = character.GetComponent<CharacterAnimator>();
-                if (characterAnimator != null)
-                    characterAnimator.enabled = false;
-                var animator = character.GetComponent<Animator>();
-                if (animator != null)
-                {
-                    animator.Play(animName, 0, 0f);
-                    played++;
-                }
-            }
-            console.Log($"Played '{animName}' on {played}/{total} characters.");
-        }
-    }
-    
-
-    private class PrintUserNameCommand : ICommand
-    {
-        public string Name => "printusername";
-        public string[] Aliases => new[] { "name" };
-        public string Description => "printusername - Logs 'My name is Messi the Goat'.";
-        public void Execute(string[] args, CommandConsole console) => console.Log("My name is Messi the Goat");
-    }
-
-    #endregion
 }
+
