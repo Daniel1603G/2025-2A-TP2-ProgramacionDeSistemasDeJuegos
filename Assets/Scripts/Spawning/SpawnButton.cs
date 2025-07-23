@@ -18,7 +18,6 @@ public class SpawnButton : MonoBehaviour, ISetup<ButtonSpawnConfig>
 
     private void OnClick()
     {
-    
         var spawner = FindObjectOfType<CharacterSpawner>();
         spawner.Spawn(_config.spawnConfig);
     }

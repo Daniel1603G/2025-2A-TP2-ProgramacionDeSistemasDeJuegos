@@ -5,7 +5,7 @@ using UnityEngine;
 public class CharacterSpawnConfig : ScriptableObject
 {
     
-    
+    public float spawnSpaceX ;
     
     public Character prefab;
 
